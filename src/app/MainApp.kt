@@ -4,27 +4,35 @@ import app.random.FileRandom
 import app.random.IRandom
 import app.random.StandardRandom
 import java.io.File
-import java.util.*
+import kotlin.system.exitProcess
 
-val CITIES_COUNT = 10
-val DISTANCES_FILE = "distancias_10.txt"
-
+var citiesCount = 0
+var distancesFile = ""
 val distancesMap = mutableMapOf<Set<Int>, Int>()
 var random: IRandom = StandardRandom()
 
 fun main(args: Array<String>) {
-    if(args.size > 1) {
-        print("Argumentos:\n\t- {fichero}: El fichero del que leer los números aleatorios (opcional)")
-    } else if(args.size == 1) {
-        random = FileRandom(File(args[0]))
+    when(args.size) {
+        1 -> distancesFile = args[0]
+        2 -> {
+            distancesFile = args[0]
+            random = FileRandom(File(args[1]))
+        }
+        else -> {
+            println("Argumentos:")
+            println("\t- 1 [Obligatorio].- El fichero del que leer las distancias entre ciudades")
+            println("\t- 2 [Opcional].- El fichero del que leer los números aleatorios")
+
+            exitProcess(0)
+        }
     }
 
     run()
 }
 
 fun run() {
-    var currentSolution = generateInitialSolution()
     loadFile()
+    var currentSolution = generateInitialSolution()
 
     do {
         val bestNeighbor = currentSolution
@@ -42,11 +50,11 @@ fun run() {
 fun generateInitialSolution(): List<Int> {
     val result = mutableListOf<Int>()
 
-    while(result.size < CITIES_COUNT - 1) {
-        var current = Math.floor(random.next() * (CITIES_COUNT - 1)).toInt()
+    while(result.size < citiesCount - 1) {
+        var current = Math.floor(random.next() * (citiesCount - 1)).toInt()
 
         do {
-            current %= (CITIES_COUNT - 1)
+            current %= (citiesCount - 1)
             current++
         } while(result.contains(current))
 
@@ -60,11 +68,11 @@ fun generateNeighbors(bestNeighbor: List<Int>): List<Int> {
     var currentNeighbor = bestNeighbor.toMutableList()
     val generated = mutableSetOf<Pair<Int, Int>>()
 
-    while(getCost(currentNeighbor) >= getCost(bestNeighbor) && generated.size < (CITIES_COUNT - 1) * (CITIES_COUNT - 2) / 2) {
+    while(getCost(currentNeighbor) >= getCost(bestNeighbor) && generated.size < (citiesCount - 1) * (citiesCount - 2) / 2) {
         currentNeighbor = bestNeighbor.toMutableList()
 
-        var index1 = Math.floor(random.next() * (CITIES_COUNT - 1)).toInt()
-        var index2 = Math.floor(random.next() * (CITIES_COUNT - 1)).toInt()
+        var index1 = Math.floor(random.next() * (citiesCount - 1)).toInt()
+        var index2 = Math.floor(random.next() * (citiesCount - 1)).toInt()
 
         if(index2 > index1) index1 = index2.also { index2 = index1 }
 
@@ -75,7 +83,7 @@ fun generateNeighbors(bestNeighbor: List<Int>): List<Int> {
             currentIndex2++
 
             if(currentIndex2 >= currentIndex1) {
-                currentIndex1 = (currentIndex1 + 1) % (CITIES_COUNT - 1)
+                currentIndex1 = (currentIndex1 + 1) % (citiesCount - 1)
                 currentIndex2 = 0
             }
         }
@@ -97,9 +105,10 @@ fun getCost(solution: List<Int>): Int {
 }
 
 fun loadFile() {
-    File(DISTANCES_FILE).readLines().forEachIndexed { lineIndex, line ->
+    File(distancesFile).readLines().forEachIndexed { lineIndex, line ->
         line.split("\t").forEachIndexed { fieldIndex, field ->
             distancesMap.put(setOf(lineIndex + 1, fieldIndex), field.toInt())
+            citiesCount = lineIndex + 2
         }
     }
 }
