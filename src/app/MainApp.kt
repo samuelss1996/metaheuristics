@@ -43,8 +43,7 @@ fun run() {
         }
     } while(getCost(currentNeighbor) < getCost(bestNeighbor))
 
-    println(currentSolution)
-    println(getCost(currentSolution))
+    println("Solución: 0${currentSolution}0\nDistancia: ${getCost(currentSolution)}")
 }
 
 fun generateInitialSolution(): List<Int> {
