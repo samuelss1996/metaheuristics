@@ -32,18 +32,26 @@ fun main(args: Array<String>) {
 
 fun run() {
     loadFile()
+
     var currentSolution = generateInitialSolution()
+    var solutionIndex = 0
 
     do {
         val bestNeighbor = currentSolution
-        val currentNeighbor = generateNeighbors(bestNeighbor)
+        val bestNeighborCost = getCost(bestNeighbor)
+
+        println("S$solutionIndex -> $currentSolution; ${bestNeighborCost}km")
+
+        val currentNeighbor = generateNeighbors(bestNeighbor, bestNeighborCost)
 
         if(getCost(currentNeighbor) < getCost(currentSolution)) {
             currentSolution = currentNeighbor
         }
-    } while(getCost(currentNeighbor) < getCost(bestNeighbor))
 
-    println("Solución: 0${currentSolution}0\nDistancia: ${getCost(currentSolution)}")
+        solutionIndex++
+    } while(getCost(currentNeighbor) < bestNeighborCost)
+
+    println("Solución final: 0${currentSolution}0\nDistancia: ${getCost(currentSolution)}km")
 }
 
 fun generateInitialSolution(): List<Int> {
@@ -63,11 +71,14 @@ fun generateInitialSolution(): List<Int> {
     return result
 }
 
-fun generateNeighbors(bestNeighbor: List<Int>): List<Int> {
-    var currentNeighbor = bestNeighbor.toMutableList()
+fun generateNeighbors(bestNeighbor: List<Int>, bestNeighborCost: Int): List<Int> {
     val generated = mutableSetOf<Pair<Int, Int>>()
 
-    while(getCost(currentNeighbor) >= getCost(bestNeighbor) && generated.size < (citiesCount - 1) * (citiesCount - 2) / 2) {
+    var currentNeighbor = bestNeighbor.toMutableList()
+    var currentNeighborCost = getCost(currentNeighbor)
+    var neighborIndex = 0
+
+    while(currentNeighborCost >= bestNeighborCost && generated.size < (citiesCount - 1) * (citiesCount - 2) / 2) {
         currentNeighbor = bestNeighbor.toMutableList()
 
         var index1 = Math.floor(random.next() * (citiesCount - 1)).toInt()
@@ -89,8 +100,13 @@ fun generateNeighbors(bestNeighbor: List<Int>): List<Int> {
 
         generated.add(Pair(currentIndex1, currentIndex2))
         currentNeighbor[currentIndex1] = currentNeighbor[currentIndex2].also { currentNeighbor[currentIndex2] = currentNeighbor[currentIndex1] }
+        currentNeighborCost = getCost(currentNeighbor)
+
+        println("\tV$neighborIndex -> Intercambio: ($currentIndex1, $currentIndex2): $currentNeighbor; ${currentNeighborCost}km")
+        neighborIndex++
     }
 
+    println()
     return currentNeighbor
 }
 
