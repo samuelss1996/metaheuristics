@@ -40,7 +40,7 @@ fun run() {
         val bestNeighbor = currentSolution
         val bestNeighborCost = getCost(bestNeighbor)
 
-        println("S$solutionIndex -> $currentSolution; ${bestNeighborCost}km")
+        println("SOLUCION S_$solutionIndex -> $currentSolution; ${bestNeighborCost}km")
 
         val currentNeighbor = generateNeighbors(bestNeighbor, bestNeighborCost)
 
@@ -102,7 +102,7 @@ fun generateNeighbors(bestNeighbor: List<Int>, bestNeighborCost: Int): List<Int>
         currentNeighbor[currentIndex1] = currentNeighbor[currentIndex2].also { currentNeighbor[currentIndex2] = currentNeighbor[currentIndex1] }
         currentNeighborCost = getCost(currentNeighbor)
 
-        println("\tV$neighborIndex -> Intercambio: ($currentIndex1, $currentIndex2): $currentNeighbor; ${currentNeighborCost}km")
+        println("\tVECINO V_$neighborIndex -> Intercambio: ($currentIndex1, $currentIndex2); $currentNeighbor; ${currentNeighborCost}km")
         neighborIndex++
     }
 
