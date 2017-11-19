@@ -34,24 +34,6 @@ fun run() {
     loadFile()
 
     var currentSolution = generateInitialSolution()
-    var solutionIndex = 0
-
-    do {
-        val bestNeighbor = currentSolution
-        val bestNeighborCost = getCost(bestNeighbor)
-
-        println("SOLUCION S_$solutionIndex -> $currentSolution; ${bestNeighborCost}km")
-
-        val currentNeighbor = generateNeighbors(bestNeighbor, bestNeighborCost)
-
-        if(getCost(currentNeighbor) < getCost(currentSolution)) {
-            currentSolution = currentNeighbor
-        }
-
-        solutionIndex++
-    } while(getCost(currentNeighbor) < bestNeighborCost)
-
-    println("Solución final: 0${currentSolution}0\nDistancia: ${getCost(currentSolution)}km")
 }
 
 fun generateInitialSolution(): List<Int> {
@@ -67,6 +49,10 @@ fun generateInitialSolution(): List<Int> {
 
         result.add(current)
     }
+
+    println("RECORRIDO INICIAL")
+    println("\tRECORRIDO: ${result.toString().replace("[","").replace("]","").replace(",","")} ")
+    println("\tCOSTE (km): ${getCost(result)}\n")
 
     return result
 }
