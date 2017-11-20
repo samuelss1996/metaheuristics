@@ -10,7 +10,7 @@ const val TOTAL_ITERATIONS = 10000
 
 var citiesCount = 0
 var distancesFile = ""
-val distancesMap = mutableMapOf<Set<Int>, Int>()
+var distancesMatrix = arrayOf(arrayOf(0))
 val tabooList = mutableListOf<Pair<Int, Int>>()
 var random: IRandom = StandardRandom()
 
@@ -117,9 +117,7 @@ fun generateBestNeighbor(solution: List<Int>): List<Int> {
     return bestNeighbor
 }
 
-fun getDistance(city1: Int, city2: Int): Int {
-    return distancesMap[setOf(if(city1 > city2) city1 else city2, if(city1 < city2) city1 else city2)]!!
-}
+fun getDistance(city1: Int, city2: Int): Int = distancesMatrix[city1][city2]
 
 fun getCost(solution: List<Int>): Int {
     return getDistance(0, solution.first()) + (1 until solution.size).map { getDistance(solution[it - 1], solution[it]) }
@@ -127,10 +125,16 @@ fun getCost(solution: List<Int>): Int {
 }
 
 fun loadFile() {
-    File(distancesFile).readLines().forEachIndexed { lineIndex, line ->
-        line.split("\t").forEachIndexed { fieldIndex, field ->
-            distancesMap.put(setOf(lineIndex + 1, fieldIndex), field.toInt())
-            citiesCount = lineIndex + 2
-        }
+    val distancesDynamicMatrix = mutableListOf<MutableList<Int>>()
+    distancesDynamicMatrix.add(mutableListOf())
+
+    File(distancesFile).readLines().forEach { line ->
+        val row = mutableListOf<Int>()
+
+        distancesDynamicMatrix.add(row)
+        line.split("\t").forEach { row.add(it.toInt()) }
     }
+
+    citiesCount = distancesDynamicMatrix.size
+    distancesMatrix = Array(distancesDynamicMatrix.size, {i -> Array(distancesDynamicMatrix.size, {j -> distancesDynamicMatrix.getOrNull(i)?.getOrNull(j) ?: 0})})
 }
