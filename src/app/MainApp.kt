@@ -43,6 +43,7 @@ fun run() {
     var bestSolution = generateInitialSolution()
     var currentSolution = bestSolution
     var iterationsWithoutImprovement = 0
+    var bestIteration = 0
 
     for(i in 1..TOTAL_ITERATIONS) {
         println("ITERACION: $i")
@@ -52,6 +53,7 @@ fun run() {
         if(getCost(currentSolution) < getCost(bestSolution)) {
             bestSolution = currentSolution
             iterationsWithoutImprovement = 0
+            bestIteration = i
         }
 
         println("\tRECORRIDO: ${currentSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
@@ -71,6 +73,11 @@ fun run() {
 
         iterationsWithoutImprovement++
     }
+
+    println("\nMEJOR SOLUCION: ")
+    println("\tRECORRIDO: ${bestSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
+    println("\tCOSTE (km): ${getCost(bestSolution)}")
+    println("\tITERACION: $bestIteration")
 }
 
 fun generateInitialSolution(): List<Int> {
