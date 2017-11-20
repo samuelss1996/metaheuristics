@@ -23,6 +23,14 @@ class TabooList(private val capacity: Int, private val valuesRange: Int) {
         }
     }
 
+    fun clear() {
+        this.presentMatrix.forEach{row -> row.forEachIndexed{colIndex, _-> row[colIndex] = false}}
+        this.content.forEach{row -> row.forEachIndexed{colIndex, _ -> row[colIndex] = 0}}
+        this.currentPosition = 0
+        this.filledCount = 0
+        this.limitReached = false
+    }
+
     override fun toString(): String {
         val stringBuilder = StringBuilder()
 
