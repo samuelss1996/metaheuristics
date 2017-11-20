@@ -3,15 +3,17 @@ package app
 import app.random.FileRandom
 import app.random.IRandom
 import app.random.StandardRandom
+import app.util.TabooList
 import java.io.File
 import kotlin.system.exitProcess
 
 const val TOTAL_ITERATIONS = 10000
+const val TABOO_CAPACITY = 100
 
 var citiesCount = 0
 var distancesFile = ""
 var distancesMatrix = arrayOf(arrayOf(0))
-val tabooList = mutableListOf<Pair<Int, Int>>()
+var tabooList = TabooList(TABOO_CAPACITY, 0)
 var random: IRandom = StandardRandom()
 
 fun main(args: Array<String>) {
@@ -54,10 +56,7 @@ fun run() {
         println("\tCOSTE (km): ${getCost(currentSolution)}")
         println("\tITERACIONES SIN MEJORA: $iterationsWithoutImprovement")
         println("\tLISTA TABU:")
-
-        tabooList.forEach { println("\t${it.first} ${it.second}")}
-
-        println()
+        println("$tabooList")
 
         iterationsWithoutImprovement++
     }
@@ -97,7 +96,7 @@ fun generateBestNeighbor(solution: List<Int>): List<Int> {
 
             val currentCost = getCost(currentNeighbor)
 
-            if(currentCost < bestCost && !tabooList.contains(Pair(i, j))) {
+            if(currentCost < bestCost && !tabooList.contains(i, j)) {
                 bestNeighbor = currentNeighbor
                 bestCost = currentCost
 
@@ -107,17 +106,13 @@ fun generateBestNeighbor(solution: List<Int>): List<Int> {
         }
     }
 
-    tabooList.add(Pair(bestI, bestJ))
-    if(tabooList.size > citiesCount) {
-        tabooList.removeAt(0)
-    }
-
+    tabooList.add(bestI, bestJ)
     println("\tINTERCAMBIO: ($bestI, $bestJ)")
 
     return bestNeighbor
 }
 
-fun getDistance(city1: Int, city2: Int): Int = distancesMatrix[city1][city2]
+fun getDistance(city1: Int, city2: Int): Int = distancesMatrix[maxOf(city1, city2)][minOf(city1, city2)]
 
 fun getCost(solution: List<Int>): Int {
     return getDistance(0, solution.first()) + (1 until solution.size).map { getDistance(solution[it - 1], solution[it]) }
@@ -137,4 +132,5 @@ fun loadFile() {
 
     citiesCount = distancesDynamicMatrix.size
     distancesMatrix = Array(distancesDynamicMatrix.size, {i -> Array(distancesDynamicMatrix.size, {j -> distancesDynamicMatrix.getOrNull(i)?.getOrNull(j) ?: 0})})
+    tabooList = TabooList(TABOO_CAPACITY, citiesCount - 1)
 }
