@@ -11,6 +11,8 @@ const val TOTAL_ITERATIONS = 10000
 const val TABOO_CAPACITY = 100
 const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
+// TODO parse doubles for all locales
+
 fun main(args: Array<String>) {
     when(args.size) {
         1 -> Main(args[0]).run()
