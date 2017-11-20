@@ -23,8 +23,6 @@ class TabooList(private val capacity: Int, private val valuesRange: Int) {
         }
     }
 
-    fun contains(i: Int, j: Int) = this.presentMatrix[i][j]
-
     override fun toString(): String {
         val stringBuilder = StringBuilder()
 
@@ -34,4 +32,6 @@ class TabooList(private val capacity: Int, private val valuesRange: Int) {
 
         return stringBuilder.toString()
     }
+
+    fun contains(i: Int, j: Int) = this.presentMatrix[i][j]
 }

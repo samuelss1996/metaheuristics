@@ -9,8 +9,10 @@ import kotlin.system.exitProcess
 
 const val TOTAL_ITERATIONS = 10000
 const val TABOO_CAPACITY = 100
+const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
 var citiesCount = 0
+var resetsCount = 0
 var distancesFile = ""
 var distancesMatrix = arrayOf(arrayOf(0))
 var tabooList = TabooList(TABOO_CAPACITY, 0)
@@ -57,6 +59,15 @@ fun run() {
         println("\tITERACIONES SIN MEJORA: $iterationsWithoutImprovement")
         println("\tLISTA TABU:")
         println("$tabooList")
+
+        if(iterationsWithoutImprovement >= MAX_ITERATIONS_WITHOUT_IMPROVEMENT) {
+            iterationsWithoutImprovement = 0
+            tabooList = TabooList(TABOO_CAPACITY, citiesCount - 1) // TODO maybe clear method
+            currentSolution = bestSolution
+
+            resetsCount++
+            println("***************\nREINICIO: $resetsCount\n***************\n")
+        }
 
         iterationsWithoutImprovement++
     }
