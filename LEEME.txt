@@ -1,5 +1,5 @@
 Para compilar se puede ejecutar el archivo compile.sh, un script de Bash.
-IMPORTANTE: El script necesita que curl esté instalado en el sistema para funcionar
+IMPORTANTE: El script necesita que curl y zip estén instalados en el sistema para funcionar
 
 Este script hace lo siguiente:
 	- Dado que el programa está implementado en Kotlin, se instala el compilador de Kotlin. No requiere permisos de root, pero si necesitará realizar una descarga desde Internet. En caso de que en la máquina ya se disponga del compilador de Kotlin instalado, se pueden comentar estas líneas.
@@ -7,3 +7,5 @@ Este script hace lo siguiente:
 
 Para ejecutar, hacer como para cualquier otro programa en Java:
 	java -jar TabooSearch.jar distancias [aleatorios]
+
+En caso de tener problemas con la compilación, se proporciona una versión ya compilada del programa dentro de la carpeta ./out
