@@ -3,127 +3,121 @@ package app
 import app.random.FileRandom
 import app.random.IRandom
 import app.random.StandardRandom
+import app.util.Cities
+import app.util.TabooList
 import java.io.File
-import kotlin.system.exitProcess
 
-var citiesCount = 0
-var distancesFile = ""
-val distancesMap = mutableMapOf<Set<Int>, Int>()
-var random: IRandom = StandardRandom()
+const val TOTAL_ITERATIONS = 10000
+const val TABOO_CAPACITY = 100
+const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
+
+// TODO parse doubles for all locales
 
 fun main(args: Array<String>) {
     when(args.size) {
-        1 -> distancesFile = args[0]
-        2 -> {
-            distancesFile = args[0]
-            random = FileRandom(File(args[1]))
-        }
+        1 -> Main(args[0]).run()
+        2 -> Main(args[0], FileRandom(File(args[1]))).run()
         else -> {
             println("Argumentos:")
             println("\t- 1 [Obligatorio].- El fichero del que leer las distancias entre ciudades")
             println("\t- 2 [Opcional].- El fichero del que leer los números aleatorios")
-
-            exitProcess(0)
         }
     }
-
-    run()
 }
 
-fun run() {
-    loadFile()
+class Main(distancesFile: String, private val random: IRandom = StandardRandom()) {
+    private val cities = Cities(File(distancesFile))
+    private val tabooList = TabooList(TABOO_CAPACITY, this.cities.citiesCount - 1)
+    private var resetsCount = 0
 
-    var currentSolution = generateInitialSolution()
-    var solutionIndex = 0
+    fun run() {
+        var bestSolution = generateInitialSolution()
+        var currentSolution = bestSolution
+        var iterationsWithoutImprovement = 0
+        var bestIteration = 0
 
-    do {
-        val bestNeighbor = currentSolution
-        val bestNeighborCost = getCost(bestNeighbor)
+        for(i in 1..TOTAL_ITERATIONS) {
+            println("ITERACION: $i")
 
-        println("SOLUCION S_$solutionIndex -> $currentSolution; ${bestNeighborCost}km")
+            currentSolution = generateBestNeighbor(currentSolution)
 
-        val currentNeighbor = generateNeighbors(bestNeighbor, bestNeighborCost)
+            if(this.cities.getCost(currentSolution) < this.cities.getCost(bestSolution)) {
+                bestSolution = currentSolution
+                iterationsWithoutImprovement = 0
+                bestIteration = i
+            }
 
-        if(getCost(currentNeighbor) < getCost(currentSolution)) {
-            currentSolution = currentNeighbor
+            println("\tRECORRIDO: ${currentSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
+            println("\tCOSTE (km): ${this.cities.getCost(currentSolution)}")
+            println("\tITERACIONES SIN MEJORA: $iterationsWithoutImprovement")
+            println("\tLISTA TABU:")
+            println("$tabooList")
+
+            if(iterationsWithoutImprovement >= MAX_ITERATIONS_WITHOUT_IMPROVEMENT) {
+                iterationsWithoutImprovement = 0
+                currentSolution = bestSolution
+                this.resetsCount++
+
+                this.tabooList.clear()
+                println("***************\nREINICIO: ${this.resetsCount}\n***************\n")
+            }
+
+            iterationsWithoutImprovement++
         }
 
-        solutionIndex++
-    } while(getCost(currentNeighbor) < bestNeighborCost)
-
-    println("Solución final: 0${currentSolution}0\nDistancia: ${getCost(currentSolution)}km")
-}
-
-fun generateInitialSolution(): List<Int> {
-    val result = mutableListOf<Int>()
-
-    while(result.size < citiesCount - 1) {
-        var current = Math.floor(random.next() * (citiesCount - 1)).toInt()
-
-        do {
-            current %= (citiesCount - 1)
-            current++
-        } while(result.contains(current))
-
-        result.add(current)
+        println("\nMEJOR SOLUCION: ")
+        println("\tRECORRIDO: ${bestSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
+        println("\tCOSTE (km): ${this.cities.getCost(bestSolution)}")
+        println("\tITERACION: $bestIteration")
     }
 
-    return result
-}
+    private fun generateInitialSolution(): List<Int> {
+        val result = mutableListOf<Int>()
 
-fun generateNeighbors(bestNeighbor: List<Int>, bestNeighborCost: Int): List<Int> {
-    val generated = mutableSetOf<Pair<Int, Int>>()
+        while(result.size < this.cities.citiesCount - 1) {
+            var current = Math.floor(this.random.next() * (this.cities.citiesCount - 1)).toInt()
 
-    var currentNeighbor = bestNeighbor.toMutableList()
-    var currentNeighborCost = getCost(currentNeighbor)
-    var neighborIndex = 0
+            do {
+                current %= (this.cities.citiesCount - 1)
+                current++
+            } while(result.contains(current))
 
-    while(currentNeighborCost >= bestNeighborCost && generated.size < (citiesCount - 1) * (citiesCount - 2) / 2) {
-        currentNeighbor = bestNeighbor.toMutableList()
+            result.add(current)
+        }
 
-        var index1 = Math.floor(random.next() * (citiesCount - 1)).toInt()
-        var index2 = Math.floor(random.next() * (citiesCount - 1)).toInt()
+        println("RECORRIDO INICIAL")
+        println("\tRECORRIDO: ${result.toString().replace("[","").replace("]","").replace(",","")} ")
+        println("\tCOSTE (km): ${this.cities.getCost(result)}\n")
 
-        if(index2 > index1) index1 = index2.also { index2 = index1 }
+        return result
+    }
 
-        var currentIndex1 = index1
-        var currentIndex2 = index2
+    private fun generateBestNeighbor(solution: List<Int>): List<Int> {
+        var bestCost = Int.MAX_VALUE
+        var bestNeighbor = solution
+        var bestI = 0
+        var bestJ = 0
 
-        while(generated.contains(Pair(currentIndex1, currentIndex2)) || currentIndex1 == currentIndex2) {
-            currentIndex2++
+        for(i in 1 until this.cities.citiesCount - 1) {
+            for(j in 0 until i) {
+                val currentNeighbor = solution.toMutableList()
+                currentNeighbor[i] = currentNeighbor[j].also { currentNeighbor[j] = currentNeighbor[i] }
 
-            if(currentIndex2 >= currentIndex1) {
-                currentIndex1 = (currentIndex1 + 1) % (citiesCount - 1)
-                currentIndex2 = 0
+                val currentCost = this.cities.getCost(currentNeighbor)
+
+                if(currentCost < bestCost && !this.tabooList.contains(i, j)) {
+                    bestNeighbor = currentNeighbor
+                    bestCost = currentCost
+
+                    bestI = i
+                    bestJ = j
+                }
             }
         }
 
-        generated.add(Pair(currentIndex1, currentIndex2))
-        currentNeighbor[currentIndex1] = currentNeighbor[currentIndex2].also { currentNeighbor[currentIndex2] = currentNeighbor[currentIndex1] }
-        currentNeighborCost = getCost(currentNeighbor)
+        this.tabooList.add(bestI, bestJ)
+        println("\tINTERCAMBIO: ($bestI, $bestJ)")
 
-        println("\tVECINO V_$neighborIndex -> Intercambio: ($currentIndex1, $currentIndex2); $currentNeighbor; ${currentNeighborCost}km")
-        neighborIndex++
-    }
-
-    println()
-    return currentNeighbor
-}
-
-fun getDistance(city1: Int, city2: Int): Int {
-    return distancesMap[setOf(if(city1 > city2) city1 else city2, if(city1 < city2) city1 else city2)]!!
-}
-
-fun getCost(solution: List<Int>): Int {
-    return getDistance(0, solution.first()) + (1 until solution.size).map { getDistance(solution[it - 1], solution[it]) }
-            .sum() + getDistance(solution.last(), 0)
-}
-
-fun loadFile() {
-    File(distancesFile).readLines().forEachIndexed { lineIndex, line ->
-        line.split("\t").forEachIndexed { fieldIndex, field ->
-            distancesMap.put(setOf(lineIndex + 1, fieldIndex), field.toInt())
-            citiesCount = lineIndex + 2
-        }
+        return bestNeighbor
     }
 }
