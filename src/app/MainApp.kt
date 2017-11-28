@@ -7,7 +7,7 @@ import app.util.Cities
 import app.util.TabooList
 import java.io.File
 
-const val TOTAL_ITERATIONS = 10000
+const val TOTAL_ITERATIONS = 1000
 const val TABOO_CAPACITY = 100
 const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
@@ -37,7 +37,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
         for(i in 1..TOTAL_ITERATIONS) {
             println("ITERACION: $i")
 
-            currentSolution = generateBestNeighbor(currentSolution)
+            currentSolution = generateBestNeighbor(currentSolution, this.cities.getCost(bestSolution))
 
             if(this.cities.getCost(currentSolution) < this.cities.getCost(bestSolution)) {
                 bestSolution = currentSolution
@@ -88,7 +88,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
         return result
     }
 
-    private fun generateBestNeighbor(solution: List<Int>): List<Int> {
+    private fun generateBestNeighbor(solution: List<Int>, bestGlobalCost: Int): List<Int> {
         var bestCost = Int.MAX_VALUE
         var bestNeighbor = solution
         var bestI = 0
@@ -101,7 +101,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
                 val currentCost = this.cities.getCost(currentNeighbor)
 
-                if(currentCost < bestCost && !this.tabooList.contains(i, j)) {
+                if(currentCost < bestCost && (!this.tabooList.contains(i, j) || currentCost < bestGlobalCost)) {
                     bestNeighbor = currentNeighbor
                     bestCost = currentCost
 
