@@ -11,8 +11,6 @@ const val TOTAL_ITERATIONS = 10000
 const val TABOO_CAPACITY = 100
 const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
-// TODO parse doubles for all locales
-
 fun main(args: Array<String>) {
     when(args.size) {
         1 -> Main(args[0]).run()
@@ -73,16 +71,14 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
     private fun generateInitialSolution(): List<Int> {
         val result = mutableListOf<Int>()
+        var lastAddedCity = 0
 
         while(result.size < this.cities.citiesCount - 1) {
-            var current = Math.floor(this.random.next() * (this.cities.citiesCount - 1)).toInt()
+            val closestCities = this.cities.getClosestOrderedCities(lastAddedCity)
+            val cityToBeAdded = closestCities.find { !result.contains(it) }!!
 
-            do {
-                current %= (this.cities.citiesCount - 1)
-                current++
-            } while(result.contains(current))
-
-            result.add(current)
+            result.add(cityToBeAdded)
+            lastAddedCity = cityToBeAdded
         }
 
         println("RECORRIDO INICIAL")
