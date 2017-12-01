@@ -1,6 +1,7 @@
 package app.util
 
 import java.io.File
+import java.util.TreeSet
 
 class Cities(matrixFile: File) {
     private val distancesMatrix: Array<Array<Int>>
@@ -19,6 +20,13 @@ class Cities(matrixFile: File) {
 
         this.citiesCount = distancesDynamicMatrix.size
         this.distancesMatrix = Array(distancesDynamicMatrix.size, {i -> Array(this.citiesCount, {j -> distancesDynamicMatrix.getOrNull(i)?.getOrNull(j) ?: 0})})
+    }
+
+    fun getClosestOrderedCities(fromCityIndex: Int): TreeSet<Int> {
+        val result = sortedSetOf<Int>(Comparator{city1, city2 -> getDistance(fromCityIndex, city1).compareTo(getDistance(fromCityIndex, city2))})
+        result.addAll(1 until this.citiesCount)
+
+        return result
     }
 
     fun getCost(solution: List<Int>) =

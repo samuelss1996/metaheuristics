@@ -11,8 +11,6 @@ const val TOTAL_ITERATIONS = 10000
 const val TABOO_CAPACITY = 100
 const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
-// TODO parse doubles for all locales
-
 fun main(args: Array<String>) {
     when(args.size) {
         1 -> Main(args[0]).run()
@@ -39,7 +37,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
         for(i in 1..TOTAL_ITERATIONS) {
             println("ITERACION: $i")
 
-            currentSolution = generateBestNeighbor(currentSolution)
+            currentSolution = generateBestNeighbor(currentSolution, this.cities.getCost(bestSolution))
 
             if(this.cities.getCost(currentSolution) < this.cities.getCost(bestSolution)) {
                 bestSolution = currentSolution
@@ -73,16 +71,14 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
     private fun generateInitialSolution(): List<Int> {
         val result = mutableListOf<Int>()
+        var lastAddedCity = 0
 
         while(result.size < this.cities.citiesCount - 1) {
-            var current = Math.floor(this.random.next() * (this.cities.citiesCount - 1)).toInt()
+            val closestCities = this.cities.getClosestOrderedCities(lastAddedCity)
+            val cityToBeAdded = closestCities.find { !result.contains(it) }!!
 
-            do {
-                current %= (this.cities.citiesCount - 1)
-                current++
-            } while(result.contains(current))
-
-            result.add(current)
+            result.add(cityToBeAdded)
+            lastAddedCity = cityToBeAdded
         }
 
         println("RECORRIDO INICIAL")
@@ -92,7 +88,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
         return result
     }
 
-    private fun generateBestNeighbor(solution: List<Int>): List<Int> {
+    private fun generateBestNeighbor(solution: List<Int>, bestGlobalCost: Int): List<Int> {
         var bestCost = Int.MAX_VALUE
         var bestNeighbor = solution
         var bestI = 0
@@ -105,7 +101,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
                 val currentCost = this.cities.getCost(currentNeighbor)
 
-                if(currentCost < bestCost && !this.tabooList.contains(i, j)) {
+                if(currentCost < bestCost && (!this.tabooList.contains(i, j) || currentCost < bestGlobalCost)) {
                     bestNeighbor = currentNeighbor
                     bestCost = currentCost
 
