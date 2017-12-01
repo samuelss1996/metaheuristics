@@ -7,7 +7,7 @@ import app.util.Cities
 import app.util.TabooList
 import java.io.File
 
-const val TOTAL_ITERATIONS = 1000
+const val TOTAL_ITERATIONS = 10000
 const val TABOO_CAPACITY = 100
 const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
 
