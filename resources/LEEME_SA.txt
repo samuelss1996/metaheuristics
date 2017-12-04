@@ -1,0 +1,74 @@
+1. Fichero distancias_sa_100_2017.txt
+
+Contiene la información de distancias para el problema de 100 ciudades. Utilizando una inicialización voraz el recorrido y coste de la solución generada con esta matriz es:
+
+RECORRIDO: 97 15 79 32 29 6 20 74 84 61 18 4 3 88 94 42 63 95 33 92 2 43 40 30 51 8 86 68 58 96 50 89 72 85 23 45 99 78 47 36 60 62 54 69 9 44 21 55 24 93 49 22 34 11 59 14 71 37 5 27 19 57 77 87 98 46 82 31 64 53 38 16 65 75 83 28 10 67 48 80 13 26 73 76 25 17 52 91 35 70 41 12 66 1 81 90 56 7 39
+FUNCION OBJETIVO (km): 4993
+
+
+2. Fichero aleatorios_sa_2017_casoN.txt:
+
+Contiene un total de 20.099 números aleatorios en el rango [0, 1) donde los 99 primeros son utilizados para la generación de la solucion inicial y los 20.000 son utilizados de dos en dos para cada una de las 10.000 iteraciones:
+
+ 	- SOLUCIÓN INICIAL: 99 primeros números. Deben transformarse al rango de valores v de la solucion, que son las ciudades validas: enteros en [1, 9]
+
+				v = 1 + floor(r * 99)
+
+	- GENERACION DE VECINOS: primer aleatorio de cada par para una iteración que representa el índice de la ciudad que se va a insertar en una nueva posición. Es decir, un total de 10.000 comenzando en el aleatorio 100, 102, 104... hasta el ...20.094, 20.096, 20.098. Este número ha de transformarse al rango de valores de los índices i de la solución: enteros en [0, 98]
+
+				i = floor(r * 99)
+
+	- CONDICION DE ACEPTACIÓN: los segundos aleatorios de cada par para una iteración (101, 103, 105, ... , 20.095, 20.097, 20.099) son utilizados para comprobar la condición de aceptación de la solución candidata. No se requiere transformar estos números aleatorios, sino que se utilizan directamente.
+
+
+3. Fichero traza_sa_2017_casoN.txt
+
+Contiene la traza de ejecución del caso de uso paso a paso para los números aleatorios del fichero anterior. En el fichero se muestra la siguiente información:
+
+* SOLUCIÓN INICIAL
+	- Recorrido inicial, generado mediante el método de inicialización aleatoria.
+	- Coste (en km) de la solución, longitud total del recorrido.
+	- Valor de inicialización de la temperatura.
+
+* ITERACIONES
+	Para generar el vecindario de una solución se exploran todas las posibles inserciones de la ciudad i generada aleatoriamente. De entre todos los intercambios generados nos quedamos con el de menor coste.
+
+	- Índice ciudad. Índice generado aleatoriamente de la ciudad de la solución actual que se ha de intercambiar para la generacion de la nueva solución.
+	- Ciudad. Ciudad correspondiente al índice anterior
+	- Índice inserción. El índice de inserción con el que se ha generado el mejor vecino.
+	- Coste (en km) de la solución, longitud total del recorrido.
+	- Delta: Diferencia entre el coste de la solución candidata y la mejor global
+	  delta = coste(mejor_global) - coste(candidata)
+	- Temperatura: Valor de la temperatura en la iteración actual.
+	  No cambia en las iteraciones del bucle interno, L(T), hasta que se produce un enfriamiento.
+	- Valor de la exponencial: valor de e^{-delta/T) en la iteración actual
+	- Solución candidata aceptada: Indica que la solución candidata se ha aceptado en la iteración actual. No se imprime esta línea cuando en caso de que sea rechazada.
+	- Candidatas probadas/aceptadas: Contadores necesarios para el criterio de la velocidad de enfriamiento L(T).
+
+* ENFRIAMIENTOS
+	- Cuando se cumple alguno de los criterios para que se lleve a cabo un enfriamiento, se señala esta operación con la marca “ENFRIAMIENTO: XX”, donde XX es el número de veces que se ha llevado a cabo esta operación durante la ejecución del algoritmo.
+	- Valor de la temperatura después de realizar el enfriamiento aplicando el mecanismo de Cauchy.
+
+* MEJOR SOLUCIÓN
+	- Recorrido de la mejor solución encontrada por el algoritmo.
+	- Coste (en km) de la mejor solución, longitud total del recorrido.
+	- Valores de mu y phi de la esta ejecución.
+
+
+4. A tener en cuenta para la generación de la traza:
+Para facilitar el proceso de evaluación se comparará la traza generada por vuestra implementación con la traza de referencia, por lo que debéis
+seguir exactamente el mismo formato a la hora de imprimir los resultados.
+
+Los números en punto flotante están impresos con una precisión de 6 decimales.
+
+También es requisito que vuestra práctica pueda ejecutarse por línea de comandos y acepte, los siguientes argumentos en este orden:
+	fichero_distancias [fichero_aleatorios]
+
+El segundo argumento es opcional:
+	* Si no se le proporciona, vuestra implementación generará una secuencia de números aleatorios diferente en cada ejecución.
+	* Si se le proporciona, se utilizará la secuencia de valores proporcionados en el fichero.
+
+La salida debe imprimirse por consola, de forma que se pueda ejecutar por línea de comandos de la siguiente forma:
+	* C/C++:	./ejecutable fichero_distancias [fichero_aleatorios] > traza_salida.txt
+	* Java:	java -jar fichero_distancias [fichero_aleatorios] > traza_salida.txt
+	* Python:	./script.py fichero_distancias [fichero_aleatorios] > traza_salida.txt
