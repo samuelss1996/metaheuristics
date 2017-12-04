@@ -4,12 +4,19 @@ import app.random.FileRandom
 import app.random.IRandom
 import app.random.StandardRandom
 import app.util.Cities
-import app.util.TabooList
 import java.io.File
+import java.text.DecimalFormat
+import java.util.*
+import kotlin.math.floor
+import kotlin.math.ln
 
-const val TOTAL_ITERATIONS = 10000
-const val TABOO_CAPACITY = 100
-const val MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100
+const val MU = 0.01
+const val PHI = 0.5
+const val MAX_ITERATIONS = 10000
+const val MAX_TESTED_CANDIDATES = 80
+const val MAX_ACCEPTED_CANDIDATES = 20
+
+data class Candidate(val solution: List<Int>, val cost: Int)
 
 fun main(args: Array<String>) {
     when(args.size) {
@@ -25,95 +32,133 @@ fun main(args: Array<String>) {
 
 class Main(distancesFile: String, private val random: IRandom = StandardRandom()) {
     private val cities = Cities(File(distancesFile))
-    private val tabooList = TabooList(TABOO_CAPACITY, this.cities.citiesCount - 1)
-    private var resetsCount = 0
+    private var initialTemperature = 0.0
 
     fun run() {
-        var bestSolution = generateInitialSolution()
-        var currentSolution = bestSolution
-        var iterationsWithoutImprovement = 0
+        var currentSolution = this.generateInitialSolution()
+        var currentCost = this.cities.getCost(currentSolution)
+        var bestSolution = currentSolution
+        var bestCost = currentCost
+        var temperature = this.initialTemperature
+        var iterations = 0
         var bestIteration = 0
+        var testedCandidates = 0
+        var acceptedCandidates = 0
+        var coolingCount = 0
 
-        for(i in 1..TOTAL_ITERATIONS) {
-            println("ITERACION: $i")
+        while(iterations < MAX_ITERATIONS) {
+            while(iterations < MAX_ITERATIONS && testedCandidates < MAX_TESTED_CANDIDATES && acceptedCandidates < MAX_ACCEPTED_CANDIDATES) {
+                iterations++
+                testedCandidates++
+                println("ITERACION: $iterations")
 
-            currentSolution = generateBestNeighbor(currentSolution, this.cities.getCost(bestSolution))
+                val (candidateSolution, candidateCost) = this.generateCandidateSolution(currentSolution)
+                val delta = candidateCost - currentCost
+                val exponential = Math.pow(Math.E, -delta / temperature)
 
-            if(this.cities.getCost(currentSolution) < this.cities.getCost(bestSolution)) {
-                bestSolution = currentSolution
-                iterationsWithoutImprovement = 0
-                bestIteration = i
+                println("\tDELTA: $delta")
+                println("\tTEMPERATURA: ${temperature.toOutput()}")
+                println("\tVALOR DE LA EXPONENCIAL: ${exponential.toOutput()}")
+
+                if(this.random.next() < exponential || delta < 0) {
+                    currentSolution = candidateSolution
+                    currentCost = candidateCost
+                    acceptedCandidates++
+
+                    if(currentCost < bestCost) {
+                        bestSolution = currentSolution
+                        bestCost = currentCost
+                        bestIteration = iterations
+                    }
+
+                    println("\tSOLUCION CANDIDATA ACEPTADA")
+                }
+
+                println("\tCANDIDATAS PROBADAS: $testedCandidates, ACEPTADAS: $acceptedCandidates\n")
             }
 
-            println("\tRECORRIDO: ${currentSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
-            println("\tCOSTE (km): ${this.cities.getCost(currentSolution)}")
-            println("\tITERACIONES SIN MEJORA: $iterationsWithoutImprovement")
-            println("\tLISTA TABU:")
-            println("$tabooList")
+            if(iterations < MAX_ITERATIONS) {
+                coolingCount++
+                temperature = this.initialTemperature / (1 + coolingCount)
+                testedCandidates = 0
+                acceptedCandidates = 0
 
-            if(iterationsWithoutImprovement >= MAX_ITERATIONS_WITHOUT_IMPROVEMENT) {
-                iterationsWithoutImprovement = 0
-                currentSolution = bestSolution
-                this.resetsCount++
-
-                this.tabooList.clear()
-                println("***************\nREINICIO: ${this.resetsCount}\n***************\n")
+                println("============================\nENFRIAMIENTO: $coolingCount\n============================")
+                println("TEMPERATURA: ${temperature.toOutput()}\n")
+            } else {
+                println("\nMEJOR SOLUCION: ")
+                println("\tRECORRIDO: ${bestSolution.toOutput()} ")
+                println("\tFUNCION OBJETIVO (km): $bestCost")
+                println("\tITERACION: $bestIteration")
+                println("\tmu = $MU, phi = $PHI")
             }
-
-            iterationsWithoutImprovement++
         }
-
-        println("\nMEJOR SOLUCION: ")
-        println("\tRECORRIDO: ${bestSolution.toString().replace("[", "").replace("]", "").replace(",", "")} ")
-        println("\tCOSTE (km): ${this.cities.getCost(bestSolution)}")
-        println("\tITERACION: $bestIteration")
     }
 
     private fun generateInitialSolution(): List<Int> {
         val result = mutableListOf<Int>()
-        var lastAddedCity = 0
 
         while(result.size < this.cities.citiesCount - 1) {
-            val closestCities = this.cities.getClosestOrderedCities(lastAddedCity)
-            val cityToBeAdded = closestCities.find { !result.contains(it) }!!
+            var current = Math.floor(this.random.next() * (this.cities.citiesCount - 1)).toInt()
 
-            result.add(cityToBeAdded)
-            lastAddedCity = cityToBeAdded
+            do {
+                current %= (this.cities.citiesCount - 1)
+                current++
+            } while(result.contains(current))
+
+            result.add(current)
         }
 
-        println("RECORRIDO INICIAL")
-        println("\tRECORRIDO: ${result.toString().replace("[","").replace("]","").replace(",","")} ")
-        println("\tCOSTE (km): ${this.cities.getCost(result)}\n")
+        this.initialTemperature = (MU / -ln(PHI)) * this.cities.getCost(result)
+
+        println("SOLUCION INICIAL:")
+        println("\tRECORRIDO: ${result.toOutput()} ")
+        println("\tFUNCION OBJETIVO (km): ${this.cities.getCost(result)}")
+        println("\tTEMPERATURA INICIAL: ${this.initialTemperature.toOutput()}\n")
 
         return result
     }
 
-    private fun generateBestNeighbor(solution: List<Int>, bestGlobalCost: Int): List<Int> {
+    private fun generateCandidateSolution(currentSolution: List<Int>): Candidate {
+        val result = currentSolution.toMutableList()
+        val a = this.random.next()
+        val cityIndexToMove = floor(a * (this.cities.citiesCount - 1)).toInt()
         var bestCost = Int.MAX_VALUE
-        var bestNeighbor = solution
-        var bestI = 0
-        var bestJ = 0
+        var bestPosition = 0
 
-        for(i in 1 until this.cities.citiesCount - 1) {
-            for(j in 0 until i) {
-                val currentNeighbor = solution.toMutableList()
-                currentNeighbor[i] = currentNeighbor[j].also { currentNeighbor[j] = currentNeighbor[i] }
+        val city = result.removeAt(cityIndexToMove)
 
-                val currentCost = this.cities.getCost(currentNeighbor)
+        for(i in (0..result.size) - cityIndexToMove) {
+            result.add(i, city)
+            val currentCost = this.cities.getCost(result)
 
-                if(currentCost < bestCost && (!this.tabooList.contains(i, j) || currentCost < bestGlobalCost)) {
-                    bestNeighbor = currentNeighbor
-                    bestCost = currentCost
-
-                    bestI = i
-                    bestJ = j
-                }
+            if(currentCost < bestCost) {
+                bestCost = currentCost
+                bestPosition = i
             }
+
+            result.removeAt(i)
         }
 
-        this.tabooList.add(bestI, bestJ)
-        println("\tINTERCAMBIO: ($bestI, $bestJ)")
+        result.add(bestPosition, city)
 
-        return bestNeighbor
+        println("\tINDICE CIUDAD: $cityIndexToMove")
+        println("\tCIUDAD: $city")
+        println("\tINDICE INSERCION: $bestPosition")
+        println("\tRECORRIDO: ${result.toOutput()} ")
+        println("\tFUNCION OBJETIVO (km): $bestCost")
+
+        return Candidate(result, bestCost)
     }
+
+    private fun Double.toOutput(): String? {
+        val format = DecimalFormat.getInstance(Locale.US)
+        format.maximumFractionDigits = 6
+        format.minimumFractionDigits = 6
+        format.isGroupingUsed = false
+
+        return format.format(this)
+    }
+
+    private fun List<Int>.toOutput() = this.toString().replace("[","").replace("]","").replace(",","")
 }
