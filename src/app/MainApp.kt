@@ -98,15 +98,8 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
     private fun generateInitialSolution(): List<Int> {
         val result = mutableListOf<Int>()
 
-        while(result.size < this.cities.citiesCount - 1) {
-            var current = Math.floor(this.random.next() * (this.cities.citiesCount - 1)).toInt()
-
-            do {
-                current %= (this.cities.citiesCount - 1)
-                current++
-            } while(result.contains(current))
-
-            result.add(current)
+        for(i in 1 until this.cities.citiesCount) {
+            result.add((1 until this.cities.citiesCount).filter { !result.contains(it) }.minBy { this.cities.getDistance(result.lastOrNull() ?: 0, it) }!!)
         }
 
         this.initialTemperature = (MU / -ln(PHI)) * this.cities.getCost(result)
