@@ -9,6 +9,7 @@ import java.text.DecimalFormat
 import java.util.*
 import kotlin.math.floor
 import kotlin.math.ln
+import kotlin.math.log10
 
 const val MU = 0.01
 const val PHI = 0.5
@@ -79,7 +80,7 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
             if(iterations < MAX_ITERATIONS) {
                 coolingCount++
-                temperature = this.initialTemperature / (1 + coolingCount)
+                temperature = this.initialTemperature / (1 + log10(coolingCount.toDouble()))
                 testedCandidates = 0
                 acceptedCandidates = 0
 
@@ -114,8 +115,8 @@ class Main(distancesFile: String, private val random: IRandom = StandardRandom()
 
     private fun generateCandidateSolution(currentSolution: List<Int>): Candidate {
         val result = currentSolution.toMutableList()
-        val a = this.random.next()
-        val cityIndexToMove = floor(a * (this.cities.citiesCount - 1)).toInt()
+        val random = this.random.next()
+        val cityIndexToMove = floor(random * (this.cities.citiesCount - 1)).toInt()
         var bestCost = Int.MAX_VALUE
         var bestPosition = 0
 
