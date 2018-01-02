@@ -3,9 +3,9 @@ IMPORTANTE: El script necesita que curl y zip estén instalados en el sistema pa
 
 Este script hace lo siguiente:
 	- Dado que el programa está implementado en Kotlin, se instala el compilador de Kotlin. No requiere permisos de root, pero si necesitará realizar una descarga desde Internet. En caso de que en la máquina ya se disponga del compilador de Kotlin instalado, se pueden comentar estas líneas.
-	- Posteriormente compila el proyecto, usando el comando kotlinc. Esto genera un fichero ejecutable por la Java Virtual Machine: SimulatedAnnealing.jar
+	- Posteriormente compila el proyecto, usando el comando kotlinc. Esto genera un fichero ejecutable por la Java Virtual Machine: EvolutionaryComputation.jar
 
 Para ejecutar, hacer como para cualquier otro programa en Java:
-	java -jar SimulatedAnnealing.jar distancias [aleatorios]
+	java -jar EvolutionaryComputation.jar distancias [aleatorios]
 
 En caso de tener problemas con la compilación, se proporciona una versión ya compilada del programa dentro de la carpeta ./out
